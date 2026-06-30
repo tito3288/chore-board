@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm --version)",
+      "Bash(npm view *)",
+      "Bash(npm install *)",
+      "Bash(npm run *)",
+      "Bash(npm test *)",
+      "Bash(xargs sed -n '/GenericTable/,/GenericSchema = /p')",
+      "Bash(node *)",
+      "Bash(file public/icons/*.png)",
+      "Bash(echo \"lint exit=$?\")",
+      "Bash(echo \"build exit=$?\")",
+      "Bash(echo \"test exit=$?\")"
+    ]
+  }
+}
