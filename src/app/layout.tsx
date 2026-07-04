@@ -1,5 +1,20 @@
 import type { Metadata, Viewport } from "next";
+import { Fraunces, Outfit } from "next/font/google";
 import "./globals.css";
+
+const fraunces = Fraunces({
+  subsets: ["latin"],
+  variable: "--font-fraunces",
+  weight: ["500", "600", "700"],
+  display: "swap",
+});
+
+const outfit = Outfit({
+  subsets: ["latin"],
+  variable: "--font-outfit",
+  weight: ["400", "500", "600", "700"],
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "Choreboard",
@@ -17,7 +32,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0f172a",
+  themeColor: "#2f5d3a",
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
@@ -27,8 +42,8 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en">
-      <body className="min-h-screen">{children}</body>
+    <html lang="en" className={`${fraunces.variable} ${outfit.variable}`}>
+      <body className="min-h-screen font-sans antialiased">{children}</body>
     </html>
   );
 }

@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { WEEKDAYS, type WeekdayIndex } from "@/lib/schedule";
 
 export type TaskActionState = { error?: string; ok?: boolean };
 
@@ -11,6 +12,50 @@ async function requireUser() {
     data: { user },
   } = await supabase.auth.getUser();
   return { supabase, user };
+}
+
+function parseSchedule(formData: FormData):
+  | {
+      ok: true;
+      scheduleType: "recurring" | "one_off";
+      weekdays: WeekdayIndex[];
+      oneOffDate: string | null;
+    }
+  | { ok: false; error: string } {
+  const scheduleType =
+    String(formData.get("schedule_type") ?? "recurring") === "one_off"
+      ? "one_off"
+      : "recurring";
+
+  if (scheduleType === "one_off") {
+    const oneOffDate = String(formData.get("one_off_date") ?? "").trim();
+    if (!oneOffDate) {
+      return { ok: false, error: "Pick a date for this one-off chore." };
+    }
+    return {
+      ok: true,
+      scheduleType,
+      weekdays: [],
+      oneOffDate,
+    };
+  }
+
+  const parsed = formData
+    .getAll("weekdays")
+    .map((value) => Number(value))
+    .filter((value): value is WeekdayIndex =>
+      Number.isInteger(value) && value >= 0 && value <= 6,
+    );
+
+  const weekdays =
+    parsed.length > 0 ? parsed : WEEKDAYS.map((weekday) => weekday.index);
+
+  return {
+    ok: true,
+    scheduleType,
+    weekdays,
+    oneOffDate: null,
+  };
 }
 
 /** Adds a task to the bottom of the list (next sort_order). */
@@ -24,6 +69,11 @@ export async function addTask(
 
   if (!title) {
     return { error: "Enter a task title." };
+  }
+
+  const schedule = parseSchedule(formData);
+  if (!schedule.ok) {
+    return { error: schedule.error };
   }
 
   const { supabase, user } = await requireUser();
@@ -43,7 +93,14 @@ export async function addTask(
 
   const { error } = await supabase
     .from("tasks")
-    .insert({ title, notes, sort_order: nextSort });
+    .insert({
+      title,
+      notes,
+      sort_order: nextSort,
+      schedule_type: schedule.scheduleType,
+      weekdays: schedule.weekdays,
+      one_off_date: schedule.oneOffDate,
+    });
 
   if (error) {
     return { error: error.message };
@@ -70,6 +127,11 @@ export async function updateTask(
     return { error: "Title can't be empty." };
   }
 
+  const schedule = parseSchedule(formData);
+  if (!schedule.ok) {
+    return { error: schedule.error };
+  }
+
   const { supabase, user } = await requireUser();
   if (!user) {
     return { error: "You're not signed in." };
@@ -77,7 +139,13 @@ export async function updateTask(
 
   const { error } = await supabase
     .from("tasks")
-    .update({ title, notes })
+    .update({
+      title,
+      notes,
+      schedule_type: schedule.scheduleType,
+      weekdays: schedule.weekdays,
+      one_off_date: schedule.oneOffDate,
+    })
     .eq("id", id);
 
   if (error) {

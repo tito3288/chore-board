@@ -3,8 +3,9 @@ import { isEmailAllowed } from "@/lib/env";
 import { createClient } from "@/lib/supabase/server";
 
 /**
- * Magic-link callback. Exchanges the auth code for a session, then re-checks the
- * email against the allow-list (defence in depth) before letting the user in.
+ * Auth callback for Supabase email confirmation/recovery flows. Password login
+ * is handled on /login, but any emailed Supabase callback is still re-checked
+ * against the allow-list before letting the user in.
  */
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);

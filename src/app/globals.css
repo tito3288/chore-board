@@ -3,7 +3,22 @@
 @tailwind utilities;
 
 :root {
-  color-scheme: light dark;
+  color-scheme: light;
+  --cb-cream: #f3ead6;
+  --cb-cream-2: #efe6d2;
+  --cb-cream-3: #e9dfc8;
+  --cb-ink: #2a2a26;
+  --cb-ink-soft: #5a5446;
+  --cb-muted: #8a8475;
+  --cb-green: #2f5d3a;
+  --cb-green-soft: #e4efe2;
+  --cb-green-mist: #f2f7ef;
+  --cb-amber: #c98a1e;
+  --cb-amber-deep: #a8631f;
+  --cb-amber-soft: #f6ecd6;
+  --cb-rose: #b14635;
+  --cb-rose-soft: #f4ddd6;
+  --cb-border: #e2d8be;
 }
 
 html,
@@ -13,5 +28,15 @@ body {
 }
 
 body {
-  @apply bg-gray-50 text-gray-900 antialiased;
+  min-height: 100vh;
+  margin: 0;
+  color: var(--cb-ink);
+  background:
+    radial-gradient(110% 80% at 82% -12%, #f8f0df 0%, #efe6d2 42%, transparent 74%),
+    linear-gradient(180deg, #f3ead6 0%, #eee3cc 100%);
+}
+
+::selection {
+  color: #ffffff;
+  background: var(--cb-green);
 }

@@ -12,23 +12,29 @@ async function requireUser() {
   return { supabase, user };
 }
 
+function occurrenceDateFromForm(formData: FormData): string | null {
+  const occurrenceDate = String(formData.get("occurrence_date") ?? "").trim();
+  return /^\d{4}-\d{2}-\d{2}$/.test(occurrenceDate) ? occurrenceDate : null;
+}
+
 /**
- * Checks a task for the current week: inserts a completion attributed to the
- * acting user. If a completion already exists for this (task, week) it is a
- * no-op (the UNIQUE constraint guards against duplicates).
+ * Checks a task for a specific calendar date. If a completion already exists
+ * for this (task, date) it is a no-op (the UNIQUE index guards duplicates).
  */
 export async function checkTask(formData: FormData): Promise<void> {
   const taskId = String(formData.get("task_id") ?? "");
-  if (!taskId) return;
+  const occurrenceDate = occurrenceDateFromForm(formData);
+  if (!taskId || !occurrenceDate) return;
 
   const { supabase, user } = await requireUser();
   if (!user) return;
 
-  const weekStart = getWeekStart(new Date());
+  const weekStart = getWeekStart(new Date(`${occurrenceDate}T12:00:00Z`));
 
   const { error } = await supabase.from("completions").insert({
     task_id: taskId,
     week_start: weekStart,
+    occurrence_date: occurrenceDate,
     completed_by: user.id,
   });
 
@@ -41,31 +47,31 @@ export async function checkTask(formData: FormData): Promise<void> {
 }
 
 /**
- * Unchecks a task: deletes ONLY this week's completion row for the task.
- * Past weeks' completions are never touched (non-destructive reset).
+ * Unchecks a task occurrence: deletes ONLY that date's completion row.
+ * Past dates' completions are never touched (non-destructive reset).
  */
 export async function uncheckTask(formData: FormData): Promise<void> {
   const taskId = String(formData.get("task_id") ?? "");
-  if (!taskId) return;
+  const occurrenceDate = occurrenceDateFromForm(formData);
+  if (!taskId || !occurrenceDate) return;
 
   const { supabase, user } = await requireUser();
   if (!user) return;
-
-  const weekStart = getWeekStart(new Date());
 
   await supabase
     .from("completions")
     .delete()
     .eq("task_id", taskId)
-    .eq("week_start", weekStart);
+    .eq("occurrence_date", occurrenceDate);
 
   revalidatePath("/");
 }
 
-/** Saves the optional per-completion note for this week's check-off. */
+/** Saves the optional per-completion note for this date's check-off. */
 export async function setCompletionNote(formData: FormData): Promise<void> {
   const taskId = String(formData.get("task_id") ?? "");
-  if (!taskId) return;
+  const occurrenceDate = occurrenceDateFromForm(formData);
+  if (!taskId || !occurrenceDate) return;
 
   const noteRaw = String(formData.get("note") ?? "").trim();
   const note = noteRaw.length > 0 ? noteRaw : null;
@@ -73,13 +79,11 @@ export async function setCompletionNote(formData: FormData): Promise<void> {
   const { supabase, user } = await requireUser();
   if (!user) return;
 
-  const weekStart = getWeekStart(new Date());
-
   await supabase
     .from("completions")
     .update({ note })
     .eq("task_id", taskId)
-    .eq("week_start", weekStart);
+    .eq("occurrence_date", occurrenceDate);
 
   revalidatePath("/");
 }

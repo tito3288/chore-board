@@ -37,6 +37,9 @@ export interface Database {
           sort_order: number;
           is_active: boolean;
           created_at: string;
+          schedule_type: "recurring" | "one_off";
+          weekdays: number[];
+          one_off_date: string | null;
         };
         Insert: {
           id?: string;
@@ -45,6 +48,9 @@ export interface Database {
           sort_order: number;
           is_active?: boolean;
           created_at?: string;
+          schedule_type?: "recurring" | "one_off";
+          weekdays?: number[];
+          one_off_date?: string | null;
         };
         Update: {
           id?: string;
@@ -53,6 +59,9 @@ export interface Database {
           sort_order?: number;
           is_active?: boolean;
           created_at?: string;
+          schedule_type?: "recurring" | "one_off";
+          weekdays?: number[];
+          one_off_date?: string | null;
         };
         Relationships: [];
       };
@@ -61,6 +70,7 @@ export interface Database {
           id: string;
           task_id: string;
           week_start: string;
+          occurrence_date: string | null;
           completed_by: string;
           completed_at: string;
           note: string | null;
@@ -69,6 +79,7 @@ export interface Database {
           id?: string;
           task_id: string;
           week_start: string;
+          occurrence_date?: string | null;
           completed_by: string;
           completed_at?: string;
           note?: string | null;
@@ -77,6 +88,7 @@ export interface Database {
           id?: string;
           task_id?: string;
           week_start?: string;
+          occurrence_date?: string | null;
           completed_by?: string;
           completed_at?: string;
           note?: string | null;
